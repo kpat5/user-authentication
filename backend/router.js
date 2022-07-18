@@ -12,9 +12,10 @@ router.post("/signup", signUp, (req, res, next) => {
     )});`,
     (err, result) => {
       if (result.length) {
-        return res
-          .status(409)
-          .send({ msg: "This email already has an account!" });
+        return res.send({
+          check: false,
+          msg: "This email already has an account!",
+        });
       } else {
         bcrypt.hash(req.body.password, 10, (err, hash) => {
           if (err) {
@@ -32,7 +33,7 @@ router.post("/signup", signUp, (req, res, next) => {
             );
             return res
               .status(201)
-              .send({ msg: "This user has been registered!!!" });
+              .send({ check: true, msg: "This user has been registered!!!" });
           }
         });
       }
@@ -44,22 +45,34 @@ router.post("/login", login, (req, res) => {
   db.query(
     `SELECT * FROM users WHERE email=${db.escape(req.body.email)}`,
     (err, result) => {
+      // console.log(req.body.email);
       if (err) {
         return res.status(400).send({ msg: err });
       }
       if (!result.length) {
-        return res.status(401).send({ msg: "Email or password is incorrect" });
+        return res.send({ msg: "false" });
       }
       bcrypt.compare(req.body.password, result[0]["password"], (err, ress) => {
         if (err) {
-          return res
-            .status(401)
-            .send({ msg: "Email or password is incorrect" });
+          return res.send({ msg: "false" });
         }
         if (ress) {
-          return res.status(200).send({ msg: "Logged In!!!" });
+          return res.status(200).send({ msg: "true" });
         }
       });
+    }
+  );
+});
+
+router.post("/getData", (req, res) => {
+  db.query(
+    `SELECT * FROM users WHERE email=${db.escape(req.body.email)}`,
+    (err, result) => {
+      console.log(req.body.email);
+      if (err) {
+        return res.status(400).send({ msg: "errrr" });
+      }
+      return res.status(200).send(result);
     }
   );
 });
